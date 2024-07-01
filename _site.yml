@@ -1,0 +1,23 @@
+name: "P8105 Final Website"
+output_dir: "."
+navbar:
+  title: "Home"
+  right:
+    - text: "Data"
+      href: Data_Description.html
+    - text: "Data Exploration"
+      href: Data_exploration.html
+    - text: "Data Analysis"
+      href:  Data_Analysis.html
+    - text: "Interactive apps"
+      menu: 
+      - text: "App1"
+        href: 
+      - text: "App2"
+        href: 
+    - icon: fa-github fa-lg
+      href: https://github.com/noahxu430/survivor.github.io.git/
+     
+output:
+  html_document: 
+    theme: journal
