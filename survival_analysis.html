@@ -11,7 +11,7 @@
 
 
 
-<title>Survivor TV Show</title>
+<title>Survival Analysis</title>
 
 <script src="site_libs/header-attrs-2.27/header-attrs.js"></script>
 <script src="site_libs/jquery-3.6.0/jquery-3.6.0.min.js"></script>
@@ -367,22 +367,121 @@ div.tocify {
 
 
 
-<h1 class="title toc-ignore"><strong>Survivor TV Show</strong></h1>
+<h1 class="title toc-ignore">Survival Analysis</h1>
 
 </div>
 
 
-<p><strong>Noah Xu</strong></p>
-<p><img src="images/head.jpg" /></p>
-<div id="intro" class="section level2">
-<h2>Intro</h2>
-<p>Survivor is a reality-competition television franchise produced in
-many countries around the world. The show “Survivor” <strong>sends a
-group of contestants (usually 16 to 20 people) to a remote or deserted
-location. There, they are divided into two or more tribes, each of which
-must find food, water, and shelter on their own while participating in
-various challenges.</strong> The American version of Survivor has 46
-seasons since its launch in 2000.</p>
+<pre class="r"><code>## reading in data
+survivor_data_final = 
+  read.csv(&quot;data/survivor_data_final.csv&quot;)
+
+status &lt;- c()
+time &lt;- c()
+for (i in 1:nrow(survivor_data_final))
+  {
+  if (survivor_data_final[i,&quot;result&quot;] == &quot;Quit&quot;) {
+    status[i] &lt;- 0
+    time[i] &lt;- survivor_data_final$days_survived[i]
+  }
+  else if (survivor_data_final[i,&quot;result&quot;] == &quot;Sole Survivor&quot;) {
+    status[i] &lt;- 0
+    time[i] &lt;- survivor_data_final$days_survived[i]
+  } 
+  else if (survivor_data_final[i,&quot;result&quot;] == &quot;Runner-up&quot;) {
+    status[i] &lt;- 0
+    time[i] &lt;- survivor_data_final$days_survived[i]
+  } else if (survivor_data_final[i,&quot;result&quot;] == &quot;Co-runner-up&quot;) {
+    status[i] &lt;- 0
+    time[i] &lt;- survivor_data_final$days_survived[i]
+  }
+  else {
+    status[i] &lt;- 1
+    time[i] &lt;- survivor_data_final$days_survived[i]
+  }
+}
+survivor_data_final[,24] &lt;- status
+survivor_data_final[,25] &lt;- time
+
+colnames(survivor_data_final)[24] &lt;- &quot;status&quot;
+colnames(survivor_data_final)[25] &lt;- &quot;time&quot;</code></pre>
+<div id="kaplan-meier-plot---personality" class="section level2">
+<h2>Kaplan-Meier plot - personality</h2>
+<pre class="r"><code>surv_model_per &lt;- survfit(Surv(time, status)~ survivor_data_final$personality_type_binary)
+
+ggsurvplot(
+  surv_model_per,
+  data = survivor_data_final,
+  size = 1,                 # change line size
+  palette =
+    c(&quot;#E7B800&quot;, &quot;#2E9FDF&quot;),# custom color palettes
+  conf.int = FALSE,          # Add confidence interval
+  pval = TRUE,              # Add p-value
+  risk.table = TRUE,        # Add risk table
+  risk.table.col = &quot;strata&quot;,# Risk table color by groups
+  legend.labs =
+    c(&quot;Extrovert&quot;, &quot;Introvert&quot;),    # Change legend labels
+  risk.table.height = 0.35, # Useful to change when you have multiple groups
+  ggtheme = theme_bw()      # Change ggplot2 theme
+)</code></pre>
+<p><img src="survival_analysis_files/figure-html/unnamed-chunk-3-1.png" width="672" /></p>
+</div>
+<div id="kaplan-meier-plot---race" class="section level2">
+<h2>Kaplan-Meier plot - Race</h2>
+<pre class="r"><code>surv_model_race &lt;- survfit(Surv(time, status)~ survivor_data_final$race)
+
+ggsurvplot(
+  surv_model_race,
+  data = survivor_data_final,
+  size = 1,                 # change line size
+  conf.int = FALSE,          # Add confidence interval
+  pval = TRUE,              # Add p-value
+  risk.table = TRUE,        # Add risk table
+  risk.table.col = &quot;strata&quot;,# Risk table color by groups
+  legend.labs =
+    c(&quot;Asian&quot;, &quot;Black&quot;, &quot;Native or Latin American&quot;),    # Change legend labels
+  risk.table.height = 0.35, # Useful to change when you have multiple groups
+  ggtheme = theme_bw()      # Change ggplot2 theme
+)</code></pre>
+<p><img src="survival_analysis_files/figure-html/unnamed-chunk-4-1.png" width="672" /></p>
+</div>
+<div id="kaplan-meier-plot---gender" class="section level2">
+<h2>Kaplan-Meier plot - Gender</h2>
+<pre class="r"><code>surv_model_sex &lt;- survfit(Surv(time, status)~ survivor_data_final$gender)
+
+ggsurvplot(
+  surv_model_sex,
+  data = survivor_data_final,
+  size = 1,                 # change line size
+  conf.int = FALSE,          # Add confidence interval
+  pval = TRUE,              # Add p-value
+  risk.table = TRUE,        # Add risk table
+  risk.table.col = &quot;strata&quot;,# Risk table color by groups
+  legend.labs =
+    c(&quot;Female&quot;, &quot;Male&quot;),    # Change legend labels
+  risk.table.height = 0.35, # Useful to change when you have multiple groups
+  ggtheme = theme_bw()      # Change ggplot2 theme
+)</code></pre>
+<p><img src="survival_analysis_files/figure-html/unnamed-chunk-5-1.png" width="672" /></p>
+</div>
+<div id="kaplan-meier-plot---region" class="section level2">
+<h2>Kaplan-Meier plot - Region</h2>
+<pre class="r"><code>surv_model_Region &lt;- survfit(Surv(time, status)~ survivor_data_final$region)
+
+ggsurvplot(
+  surv_model_Region,
+  data = survivor_data_final,
+  size = 1,                 # change line size
+  conf.int = FALSE,          # Add confidence interval
+  pval = TRUE,              # Add p-value
+  risk.table = TRUE,        # Add risk table
+  risk.table.col = &quot;strata&quot;,# Risk table color by groups
+  legend.labs =
+    c(&quot;Midwest&quot;, &quot;Northeast&quot;, &quot;South&quot;, &quot;West&quot;),    # Change legend labels
+  risk.table.height = 0.5, # Useful to change when you have multiple groups
+  ggtheme = theme_bw()      # Change ggplot2 theme
+)</code></pre>
+<p><img src="survival_analysis_files/figure-html/unnamed-chunk-6-1.png" width="672" /></p>
 </div>
 
 

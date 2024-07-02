@@ -5,10 +5,8 @@ navbar:
   right:
     - text: "Data"
       href: Data_Description.html
-    - text: "Data Exploration"
-      href: Data_exploration.html
-    - text: "Data Analysis"
-      href:  Data_Analysis.html
+    - text: "Survival Analysis"
+      href:  survival_analysis.html
     - text: "Interactive apps"
       menu: 
       - text: "App1"

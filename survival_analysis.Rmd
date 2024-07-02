@@ -1,0 +1,133 @@
+---
+title: "Survival Analysis"
+output: html_document
+---
+
+```{r, include = FALSE}
+library(survivoR)
+library(tidyverse)
+library(stringr)
+library(dplyr)
+library(survival)
+library(survminer)
+library(gtsummary)
+#library(riskRegression)
+library(tab)
+```
+
+
+
+```{r, warning = FALSE, message = FALSE}
+## reading in data
+survivor_data_final = 
+  read.csv("data/survivor_data_final.csv")
+
+status <- c()
+time <- c()
+for (i in 1:nrow(survivor_data_final))
+  {
+  if (survivor_data_final[i,"result"] == "Quit") {
+    status[i] <- 0
+    time[i] <- survivor_data_final$days_survived[i]
+  }
+  else if (survivor_data_final[i,"result"] == "Sole Survivor") {
+    status[i] <- 0
+    time[i] <- survivor_data_final$days_survived[i]
+  } 
+  else if (survivor_data_final[i,"result"] == "Runner-up") {
+    status[i] <- 0
+    time[i] <- survivor_data_final$days_survived[i]
+  } else if (survivor_data_final[i,"result"] == "Co-runner-up") {
+    status[i] <- 0
+    time[i] <- survivor_data_final$days_survived[i]
+  }
+  else {
+    status[i] <- 1
+    time[i] <- survivor_data_final$days_survived[i]
+  }
+}
+survivor_data_final[,24] <- status
+survivor_data_final[,25] <- time
+
+colnames(survivor_data_final)[24] <- "status"
+colnames(survivor_data_final)[25] <- "time"
+```
+
+
+## Kaplan-Meier plot - personality
+```{r}
+surv_model_per <- survfit(Surv(time, status)~ survivor_data_final$personality_type_binary)
+
+ggsurvplot(
+  surv_model_per,
+  data = survivor_data_final,
+  size = 1,                 # change line size
+  palette =
+    c("#E7B800", "#2E9FDF"),# custom color palettes
+  conf.int = FALSE,          # Add confidence interval
+  pval = TRUE,              # Add p-value
+  risk.table = TRUE,        # Add risk table
+  risk.table.col = "strata",# Risk table color by groups
+  legend.labs =
+    c("Extrovert", "Introvert"),    # Change legend labels
+  risk.table.height = 0.35, # Useful to change when you have multiple groups
+  ggtheme = theme_bw()      # Change ggplot2 theme
+)
+```
+
+## Kaplan-Meier plot - Race
+```{r}
+surv_model_race <- survfit(Surv(time, status)~ survivor_data_final$race)
+
+ggsurvplot(
+  surv_model_race,
+  data = survivor_data_final,
+  size = 1,                 # change line size
+  conf.int = FALSE,          # Add confidence interval
+  pval = TRUE,              # Add p-value
+  risk.table = TRUE,        # Add risk table
+  risk.table.col = "strata",# Risk table color by groups
+  legend.labs =
+    c("Asian", "Black", "Native or Latin American"),    # Change legend labels
+  risk.table.height = 0.35, # Useful to change when you have multiple groups
+  ggtheme = theme_bw()      # Change ggplot2 theme
+)
+```
+
+## Kaplan-Meier plot - Gender
+```{r}
+surv_model_sex <- survfit(Surv(time, status)~ survivor_data_final$gender)
+
+ggsurvplot(
+  surv_model_sex,
+  data = survivor_data_final,
+  size = 1,                 # change line size
+  conf.int = FALSE,          # Add confidence interval
+  pval = TRUE,              # Add p-value
+  risk.table = TRUE,        # Add risk table
+  risk.table.col = "strata",# Risk table color by groups
+  legend.labs =
+    c("Female", "Male"),    # Change legend labels
+  risk.table.height = 0.35, # Useful to change when you have multiple groups
+  ggtheme = theme_bw()      # Change ggplot2 theme
+)
+```
+
+## Kaplan-Meier plot - Region
+```{r}
+surv_model_Region <- survfit(Surv(time, status)~ survivor_data_final$region)
+
+ggsurvplot(
+  surv_model_Region,
+  data = survivor_data_final,
+  size = 1,                 # change line size
+  conf.int = FALSE,          # Add confidence interval
+  pval = TRUE,              # Add p-value
+  risk.table = TRUE,        # Add risk table
+  risk.table.col = "strata",# Risk table color by groups
+  legend.labs =
+    c("Midwest", "Northeast", "South", "West"),    # Change legend labels
+  risk.table.height = 0.5, # Useful to change when you have multiple groups
+  ggtheme = theme_bw()      # Change ggplot2 theme
+)
+```
