@@ -1,0 +1,189 @@
+---
+title: "Data"
+output: pdf_document
+---
+
+```{r, include = FALSE}
+library(survivoR)
+library(tidyverse)
+library(stringr)
+library(dplyr)
+library(survival)
+library(survminer)
+library(gtsummary)
+library(gridExtra)
+library(RColorBrewer)
+library(usmap)
+library(plotly)
+library(knitr)
+library(broom)
+```
+
+```{r, warning = FALSE, message = FALSE}
+survivor_data_final = read.csv("data/survivor_data_final.csv")
+```
+
+## Data source
+
+I used data sources from the `castaway_details` and `castaways` datasets from the [*survivoR*](https://github.com/doehm/survivoR.git) package. This package contains data from all seasons of Survivor. After cleaning, the final dataset contains unique information for each castaway for each season, including the following key variables:
+
+**`version_season`**: version and season number\
+**`full_name`**: contestant full name\
+**`age_during_show`**: age, in years\
+**`race`**: Race of castaway\
+**`ethnicity`**: Ethnicity of castaway\
+**`gender`**: 2 levels: Female, Male.\
+**`personality_type_binary`**: 2 levels: Extrovert, Introvert.\
+**`days_survived`**: Number of days survived in the show until elimination\
+**`region`**: region in the U.S. where the contestant is from. I created this variable based on the state variable available in the dataset. 4 levels: West, Midwest, Northeast, South.\
+
+## Summary
+
+```{r, warning = FALSE, message = FALSE}
+survivor_data_final %>% 
+  select(gender, race, personality_type_binary, age_during_show, days_survived, region) %>% 
+  tbl_summary(type = list(gender ~ "categorical", 
+                          race ~ "categorical", 
+                          personality_type_binary ~ "categorical", 
+                          region ~ "categorical",
+                          age_during_show ~ "continuous", 
+                          days_survived ~ "continuous"), 
+              statistic = list(all_continuous() ~ "{mean} ({sd})"), 
+              digits = all_continuous() ~ 1,
+              label = list(c(gender) ~ "Gender",
+                           c(race) ~ "Race Identifier",
+                           c(personality_type_binary) ~ "Personality Type",
+                           c(region) ~ "Region",
+                           c(age_during_show) ~ "Age During Show (Years)",
+                           c(days_survived) ~ "Survival Time on Show (Days)")) %>% 
+  bold_labels()
+``` 
+
+Note: N = 728 refers to the total count of records (i.e. contestant occurrences) in `survivor_data_final`; distinct persons may be listed in multiple records, across seasons and/or within seasons. 
+
+
+## Mean Days Survived, by Contestant Characteristics{.tabset}
+
+### Personality Type
+```{r, warning = FALSE, message = FALSE}
+## Personality type
+# p-value
+personality_p_value = t.test(days_survived ~ personality_type_binary, data = survivor_data_final) %>% 
+  tidy() %>% 
+  pull(p.value)
+
+survivor_data_final %>%
+  group_by(personality_type_binary) %>%
+  summarize(
+    n_personality_dist = n_distinct(full_name),
+    n_personality_occ = n(),
+    mean_days_survived = mean(days_survived, na.rm = TRUE)
+  ) %>%
+  na.omit() %>%
+  mutate(`p-value` = ifelse(row_number() == 1, round(personality_p_value, 3), "")) %>%
+  kable(digits = 1, col.names = c("Personality Type", "Distinct Persons", "Contestant Occurrences", "Mean Days Survived", "p-value"))
+ 
+```
+
+### Race
+```{r}
+## race
+# p-value
+race_aov = aov(days_survived ~ race, data = survivor_data_final)
+race_p_value = summary(race_aov)[[1]][["Pr(>F)"]][1]
+
+survivor_data_final %>%
+  group_by(race) %>%
+  summarize(
+    n_race_dist = n_distinct(full_name),
+    n_race_occ = n(),
+    mean_days_survived = mean(days_survived, na.rm = TRUE)
+  ) %>%
+  na.omit() %>%
+  mutate(`p-value` = ifelse(row_number() == 1, round(race_p_value, 3), "")) %>%
+  kable(digits = 1, col.names = c("Race", "Distinct Persons", "Contestant Occurrences", "Mean Days Survived", "p-value"))
+```
+
+### Gender
+```{r}
+## Gender
+# p-value
+gender_p_value <- t.test(days_survived ~ gender, data = survivor_data_final) %>% 
+  tidy() %>% 
+  pull(p.value)
+
+survivor_data_final %>%
+  group_by(gender) %>%
+  summarize(
+    n_gender_dist = n_distinct(full_name),
+    n_gender_occ = n(),
+    mean_days_survived = mean(days_survived, na.rm = TRUE)
+  ) %>%
+  na.omit() %>%
+  mutate(`p-value` = ifelse(row_number() == 1, round(gender_p_value, 3), "")) %>%
+  kable(digits = 1, col.names = c("Gender", "Distinct Persons", "Contestant Occurrences", "Mean Days Survived", "p-value"))
+```
+
+
+
+## Gender Representation Across Seasons
+
+```{r, warning = FALSE, message = FALSE}
+fill_color = brewer.pal(9,"Purples")[5]
+survivor_gender_over_time = survivor_data_final %>% 
+  group_by(version_season, gender) %>%
+  summarize(count = n_distinct(full_name)) %>%
+  mutate(freq = count / sum(count)) %>%
+  filter(gender == "Female") %>%
+  separate(col = version_season, into = c('NA', 'season'), sep = 2) %>%
+  dplyr::select(-"NA") %>%
+  mutate(season = as.numeric(season))
+
+Women_proportion_plot = 
+  ggplot(data = survivor_gender_over_time, aes(x = season, y = freq, group = 1)) +
+  geom_line(color = fill_color) +
+  geom_point(color = fill_color) +
+  geom_smooth(se = FALSE, color = "purple") + 
+  ggtitle("Change in Proportion of Women Over Time") +
+  xlab("Season") + ylab("Proportion of Women")
+
+ggplotly(Women_proportion_plot)
+```
+
+Note: Distinct person counts by gender.
+
+## Concentration of Contestants by Age and Gender
+
+```{r, warning = FALSE, message = FALSE}
+fill_color = brewer.pal(3, "Set2")
+
+dis_age_plot = ggplot(survivor_data_final, aes(x = age_during_show, fill = gender)) +
+  geom_histogram(aes(y = after_stat(count/sum(count))), bins = 15, color = "white", position = "dodge") +
+  scale_y_continuous(labels = scales::percent) +
+  scale_fill_manual(values = fill_color) +
+  ggtitle("Distribution of Ages Across Contestant Occurrences by Gender") +
+  xlab("Age (During Show)") +
+  ylab("Count") +
+  theme_minimal()
+
+ggplotly(dis_age_plot)
+
+```
+
+
+
+```{r, warning = FALSE, message = FALSE}
+survivor_state = survivor_data_final %>%
+  group_by(state) %>%
+  summarize(n = n())
+
+map_plot =
+  plot_usmap(
+  data = survivor_state, values = "n", lines = "blue"
+) + 
+  scale_fill_continuous(type = "viridis", name = "Contestant Count", label = scales::comma
+  ) + 
+  labs(title = "US States", subtitle = "Geographic Distribution of Contestants") +
+  theme(legend.position = "right")
+ggplotly(map_plot)
+```

@@ -21,3 +21,6 @@ navbar:
 output:
   html_document: 
     theme: journal
+    toc: true
+    toc_float: true
+    code_folding: hide
