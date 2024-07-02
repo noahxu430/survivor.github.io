@@ -177,13 +177,10 @@ survivor_state = survivor_data_final %>%
   group_by(state) %>%
   summarize(n = n())
 
-map_plot =
-  plot_usmap(
-  data = survivor_state, values = "n", lines = "blue"
-) + 
-  scale_fill_continuous(type = "viridis", name = "Contestant Count", label = scales::comma
-  ) + 
-  labs(title = "US States", subtitle = "Geographic Distribution of Contestants") +
-  theme(legend.position = "right")
+map_plot <- plot_usmap(data = survivor_state, values = "n", lines = "blue") +
+  scale_fill_continuous(type = "viridis", name = "Contestant Count", label = scales::comma) +
+  labs(title = "Geographic Distribution of Contestants") +
+  theme_minimal() # Using a minimal theme for simplicity
+
 ggplotly(map_plot)
 ```
