@@ -1,0 +1,12 @@
+name: survivor_shiny
+title: survivor_shiny
+username: noahxu430
+account: noahxu430
+server: shinyapps.io
+hostUrl: https://api.shinyapps.io/v1
+appId: 12262638
+bundleId: 8813662
+url: https://noahxu430.shinyapps.io/survivor_shiny/
+version: 1
+asMultiple: FALSE
+asStatic: FALSE
